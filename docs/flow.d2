@@ -1,0 +1,29 @@
+##################################################
+# mcp-guard – Execution Flow Diagram (Sequence)
+# Render: d2 --layout=elk docs/flow.d2 docs/flow.png
+##################################################
+
+shape: sequence_diagram
+
+Client: "MCP Client (LLM / Cursor)"
+Guard: "mcp-guard"
+Policy: "Policy Engine (policy.rs)"
+Human: "Human Operator (HITL)"
+Audit: "Audit Logger"
+Target: "Target MCP Server"
+
+Client -> Guard: tools/call JSON-RPC (stdin)
+Guard -> Policy: extract tool name + args
+
+Policy -> Guard: "Action = Allow / Deny / Prompt"
+
+Guard -> Human: show payload, request Y/n (if Prompt)
+Human -> Guard: approve or deny
+
+Guard -> Audit: log action (allowed / denied / approved)
+
+Guard -> Target: forward stdin bytes (if allowed or approved)
+Target -> Guard: tool result (stdout)
+Guard -> Client: forward result (stdout)
+
+Guard -> Client: JSON-RPC Error -32000 (if denied)
