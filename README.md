@@ -12,6 +12,36 @@ It provides:
 - Interactive user confirmation for sensitive tool calls (HITL).
 - Comprehensive asynchronous audit logging in JSON Lines format.
 
+## Diagrams
+
+The architecture and flow diagrams are generated from D2 source files located in the [`docs/`](docs/) directory using the ELK layout engine.
+
+### Updating the Diagrams
+
+To modify and re-render the images, you will need the `d2` tool:
+
+1. **Install D2**: Follow the installation guide at [D2 Language](https://d2lang.com/tour/install/).
+2. **Re-render**: Run the following commands from the project root to generate the updated PNGs with the ELK layout:
+
+```bash
+d2 --layout=elk docs/architecture.d2 docs/architecture.png
+d2 --layout=elk docs/flow.d2 docs/flow.png
+```
+
+### Architecture
+
+![mcp-guard architecture diagram](docs/architecture.png)
+
+*Component view showing the mcp-guard pipeline: CLI → Proxy → JSON-RPC Parser → Policy Engine → HITL / Audit Logger.*
+
+### Execution Flow
+
+![mcp-guard execution flow diagram](docs/flow.png)
+
+*Sequence diagram showing how a `tools/call` request is intercepted, evaluated (Allow / Deny / Prompt), logged, and either forwarded or rejected.*
+
+---
+
 ## Setup & Installation
 
 Ensure you have Rust installed. Then, clone the repository and build the binary:

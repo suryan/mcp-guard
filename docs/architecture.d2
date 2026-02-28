@@ -1,0 +1,108 @@
+##################################################
+# mcp-guard – Architecture Diagram
+# Layout: ELK
+# Render: d2 --layout=elk docs/architecture.d2 docs/architecture.png
+##################################################
+
+direction: right
+
+client: MCP Client (Cursor / Claude Desktop) {
+  shape: rectangle
+  style.fill: "#dbeafe"
+  style.stroke: "#3b82f6"
+  style.border-radius: 6
+  style.font-size: 14
+}
+
+server: Target MCP Server {
+  shape: rectangle
+  style.fill: "#dcfce7"
+  style.stroke: "#22c55e"
+  style.border-radius: 6
+  style.font-size: 14
+}
+
+operator: Human Operator {
+  shape: person
+  style.fill: "#fce7f3"
+  style.stroke: "#ec4899"
+  style.font-size: 13
+}
+
+logfile: Audit Log (.jsonl) {
+  shape: cylinder
+  style.fill: "#f3e8ff"
+  style.stroke: "#a855f7"
+  style.font-size: 13
+}
+
+guard: mcp-guard {
+  style.fill: "#fffbeb"
+  style.stroke: "#f59e0b"
+  style.border-radius: 10
+  style.font-size: 15
+
+  cli: CLI Layer (main.rs + cli.rs) {
+    shape: rectangle
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+    style.border-radius: 5
+    style.font-size: 12
+  }
+
+  proxy: Async I/O Proxy Loop (proxy.rs) {
+    shape: rectangle
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+    style.border-radius: 5
+    style.font-size: 12
+  }
+
+  rpc: JSON-RPC Parser (rpc.rs) {
+    shape: rectangle
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+    style.border-radius: 5
+    style.font-size: 12
+  }
+
+  policy: Policy Engine (policy.rs) {
+    shape: diamond
+    style.fill: "#fde68a"
+    style.stroke: "#b45309"
+    style.font-size: 12
+  }
+
+  hitl: HITL Prompter (hitl.rs) {
+    shape: rectangle
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+    style.border-radius: 5
+    style.font-size: 12
+  }
+
+  audit: Audit Logger (audit.rs) {
+    shape: rectangle
+    style.fill: "#fef3c7"
+    style.stroke: "#d97706"
+    style.border-radius: 5
+    style.font-size: 12
+  }
+
+  cli -> proxy: spawns and configures
+  proxy -> rpc: raw JSON-RPC line
+  rpc -> policy: parsed tool name and args
+  policy -> hitl: Action = Prompt (high-risk)
+  policy -> audit: log decision
+  hitl -> audit: log HITL outcome
+}
+
+client -> guard.proxy: stdin (JSON-RPC)
+guard.proxy -> server: forwarded stdin
+server -> guard.proxy: stdout (result)
+guard.proxy -> client: forwarded stdout
+
+guard.hitl -> operator: show payload, request Y/n
+operator -> guard.hitl: approve or deny
+
+guard.audit -> logfile: append .jsonl record
