@@ -56,6 +56,7 @@ Notice how `mcp-secret-launcher` represents the target executable (placed above 
         "mcp-atlassian"
       ],
       "env": {
+        "DISPLAY": ":0",
         "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
         "JIRA_URL": "https://company.atlassian.net",
         "JIRA_USERNAME": "jane.doe@example.com",
@@ -69,6 +70,4 @@ Notice how `mcp-secret-launcher` represents the target executable (placed above 
 }
 ```
 
-This ensures when Claude or Cursor kicks off the connection, `mcp-guard` boots first, establishes the policy map from `/home/user/.mcp_guard/guard-policy.toml`, and passes the Atlassian credentials directly down to the target process.
-
-*Reminder: Because this connects through an IDE's background process instead of a TTY terminal, tools that trigger a `prompt` will silently fail. Update your policy file to `allow` the tools you want the IDE to process.*
+*Note: When `mcp-guard` is launched by a background IDE process, it has no terminal (TTY) attached. If a tool requires a `prompt`, it will automatically detect the lack of a terminal and fallback to a native graphical dialog box (using `zenity`, `kdialog`, or macOS `AppKit`). On Linux, **you must ensure the `DISPLAY` or `WAYLAND_DISPLAY` variables are passed in the `env` block** (as shown above) so `mcp-guard` knows where to render the dialog.*

@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+#![allow(deprecated)] // assert_cmd::Command::cargo_bin is deprecated in newer versions
 use assert_cmd::Command;
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -24,9 +26,7 @@ fn test_cli_audit_with_log_file() {
     ).unwrap();
 
     let mut cmd = Command::cargo_bin("mcp-guard").unwrap();
-    cmd.arg("audit")
-        .arg("--log-file")
-        .arg(temp.path());
+    cmd.arg("audit").arg("--log-file").arg(temp.path());
 
     cmd.assert()
         .success()
@@ -40,9 +40,7 @@ fn test_cli_audit_empty_log() {
     let temp = NamedTempFile::new().unwrap(); // empty file
 
     let mut cmd = Command::cargo_bin("mcp-guard").unwrap();
-    cmd.arg("audit")
-        .arg("--log-file")
-        .arg(temp.path());
+    cmd.arg("audit").arg("--log-file").arg(temp.path());
 
     cmd.assert()
         .success()
@@ -66,13 +64,15 @@ action = "allow"
         .arg("--")
         .arg("-c")
         .arg(r#"echo "Target starting" >&2; read line; echo '{"jsonrpc": "2.0", "id": 1, "result": {"content": "ok"}}'"#);
-        
+
     let payload = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "allowed_tool", "arguments": {}}}"#;
 
     cmd.write_stdin(format!("{}\n", payload))
         .assert()
         .success()
-        .stdout(predicates::str::contains(r#"{"jsonrpc": "2.0", "id": 1, "result": {"content": "ok"}}"#));
+        .stdout(predicates::str::contains(
+            r#"{"jsonrpc": "2.0", "id": 1, "result": {"content": "ok"}}"#,
+        ));
 }
 
 #[test]
@@ -89,7 +89,7 @@ action = "deny"
         .arg("--policy")
         .arg(temp_policy.path())
         .arg("echo"); // dummy target, doesn't matter because request is blocked
-        
+
     let payload = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "denied_tool", "arguments": {}}}"#;
 
     cmd.write_stdin(format!("{}\n", payload))
@@ -116,14 +116,16 @@ action = "prompt"
         .arg("--")
         .arg("-c")
         .arg(r#"read line; echo '{"jsonrpc": "2.0", "id": 2, "result": {"content": "ok"}}'"#);
-        
+
     let payload = r#"{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "risky_tool", "arguments": {}}}"#;
 
     // Send payload, then 'y' for the prompt
     cmd.write_stdin(format!("{}\ny\n", payload))
         .assert()
         .success()
-        .stdout(predicates::str::contains(r#"{"jsonrpc": "2.0", "id": 2, "result": {"content": "ok"}}"#));
+        .stdout(predicates::str::contains(
+            r#"{"jsonrpc": "2.0", "id": 2, "result": {"content": "ok"}}"#,
+        ));
 }
 
 #[test]
@@ -140,8 +142,8 @@ action = "prompt"
         .arg("run")
         .arg("--policy")
         .arg(temp_policy.path())
-        .arg("echo"); 
-        
+        .arg("echo");
+
     let payload = r#"{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "risky_tool", "arguments": {}}}"#;
 
     // Send payload, then 'n' for the prompt
@@ -154,7 +156,9 @@ action = "prompt"
 #[test]
 fn test_proxy_invalid_mcp_request() {
     let mut temp_policy = NamedTempFile::new().unwrap();
-    temp_policy.write_all(b"[tools.allowed_tool]\naction = \"allow\"\n").unwrap();
+    temp_policy
+        .write_all(b"[tools.allowed_tool]\naction = \"allow\"\n")
+        .unwrap();
 
     let mut cmd = Command::cargo_bin("mcp-guard").unwrap();
     cmd.arg("run")
@@ -164,14 +168,17 @@ fn test_proxy_invalid_mcp_request() {
         .arg("--")
         .arg("-c")
         .arg(r#"echo "Target started" >&2; read line; echo "Got line: $line" >&2; echo '{"jsonrpc": "2.0", "result": "ok"}'"#);
-        
+
     // Valid JSON-RPC, but missing 'name' in params
-    let payload = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"something": "else"}}"#;
+    let payload =
+        r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"something": "else"}}"#;
 
     cmd.write_stdin(format!("{}\n", payload))
         .assert()
         .success()
-        .stdout(predicates::str::contains(r#"{"jsonrpc": "2.0", "result": "ok"}"#));
+        .stdout(predicates::str::contains(
+            r#"{"jsonrpc": "2.0", "result": "ok"}"#,
+        ));
 }
 
 #[test]
@@ -190,7 +197,9 @@ fn test_cli_audit_unparseable_and_blank_lines() {
 
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("(unparseable) not valid json at all"))
+        .stdout(predicates::str::contains(
+            "(unparseable) not valid json at all",
+        ))
         .stdout(predicates::str::contains("allowed"));
 }
 
@@ -215,13 +224,11 @@ fn test_proxy_run_with_log_level_in_policy() {
     std::fs::write(
         &policy_path,
         "[audit]\nlog_level = \"debug\"\n\n[tools.echo_tool]\naction = \"allow\"\n",
-    ).unwrap();
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("mcp-guard").unwrap();
-    cmd.arg("run")
-        .arg("--policy")
-        .arg(&policy_path)
-        .arg("echo");
+    cmd.arg("run").arg("--policy").arg(&policy_path).arg("echo");
 
     // Just needs to start and not crash — echo will exit immediately
     cmd.write_stdin("").assert().success();

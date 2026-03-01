@@ -103,7 +103,7 @@ pub async fn run_proxy(
                 Ok(msg) if msg.is_tool_call() || msg.is_resource_read() => {
                     if let Some(params) = msg.extract_mcp_params() {
                         let evaluation = policy.evaluate(&params.name, params.arguments.as_ref());
-                        
+
                         let action_str = match &evaluation {
                             Evaluation::Allowed => "allowed".to_string(),
                             Evaluation::Denied(_) => "denied".to_string(),
@@ -151,11 +151,10 @@ pub async fn run_proxy(
             }
 
             // Forward to server if not blocked
-            if !is_blocked
-                && let Err(e) = writer.send(&final_line).await {
-                    error!("Failed to forward client request to server: {}", e);
-                    break;
-                }
+            if !is_blocked && let Err(e) = writer.send(&final_line).await {
+                error!("Failed to forward client request to server: {}", e);
+                break;
+            }
         }
     });
 

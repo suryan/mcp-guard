@@ -1,6 +1,7 @@
+#![allow(missing_docs)]
+use mcp_guard::policy::{Action, Evaluation, Policy, ToolRule};
 use std::io::Write;
 use tempfile::NamedTempFile;
-use mcp_guard::policy::{Action, Evaluation, Policy, ToolRule};
 
 #[test]
 fn test_policy_evaluation() {
@@ -106,8 +107,6 @@ fn test_policy_evaluation() {
     );
 }
 
-
-
 #[test]
 fn test_policy_load() {
     let mut temp_file = NamedTempFile::new().unwrap();
@@ -125,14 +124,17 @@ action = "deny"
     temp_file.write_all(toml_content.as_bytes()).unwrap();
 
     let policy = Policy::load(temp_file.path()).unwrap();
-    
-    assert_eq!(policy.audit.log_file.unwrap().to_str().unwrap(), "/tmp/mcp-guard-audit.jsonl");
+
+    assert_eq!(
+        policy.audit.log_file.unwrap().to_str().unwrap(),
+        "/tmp/mcp-guard-audit.jsonl"
+    );
     assert_eq!(policy.tools.len(), 2);
-    
+
     let read_file_rule = policy.tools.get("read_file").unwrap();
     assert_eq!(read_file_rule.action, Action::Allow);
     assert_eq!(read_file_rule.deny_patterns.len(), 2);
-    
+
     let drop_table_rule = policy.tools.get("drop_table").unwrap();
     assert_eq!(drop_table_rule.action, Action::Deny);
 }
@@ -166,7 +168,10 @@ tools:
         Some(OsStr::new("yaml")),
         "path should have .yaml extension"
     );
-    assert_eq!(policy.audit.log_file.unwrap().to_str().unwrap(), "/tmp/mcp-guard-audit.jsonl");
+    assert_eq!(
+        policy.audit.log_file.unwrap().to_str().unwrap(),
+        "/tmp/mcp-guard-audit.jsonl"
+    );
     assert_eq!(policy.tools.len(), 2);
 
     let read_file_rule = policy.tools.get("read_file").unwrap();
@@ -200,19 +205,27 @@ fn test_policy_load_invalid_yaml() {
     let result = Policy::load(&yaml_path);
     assert!(result.is_err());
     let msg = format!("{}", result.unwrap_err());
-    assert!(msg.contains("Failed to parse YAML policy"), "Expected YAML error, got: {msg}");
+    assert!(
+        msg.contains("Failed to parse YAML policy"),
+        "Expected YAML error, got: {msg}"
+    );
 }
 
 #[test]
 fn test_policy_load_invalid_toml() {
     // Covers the TOML map_err closure in Policy::load()
     let mut temp_file = NamedTempFile::new().unwrap();
-    temp_file.write_all(b"this is not valid toml !!! @@@\n").unwrap();
+    temp_file
+        .write_all(b"this is not valid toml !!! @@@\n")
+        .unwrap();
 
     let result = Policy::load(temp_file.path());
     assert!(result.is_err());
     let msg = format!("{}", result.unwrap_err());
-    assert!(msg.contains("Failed to parse TOML policy"), "Expected TOML error, got: {msg}");
+    assert!(
+        msg.contains("Failed to parse TOML policy"),
+        "Expected TOML error, got: {msg}"
+    );
 }
 
 #[test]

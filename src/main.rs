@@ -30,8 +30,12 @@ async fn main() -> anyhow::Result<()> {
             if std::env::var("RUST_LOG").is_err() {
                 if let Some(ref level) = policy.audit.log_level {
                     let directive = format!("mcp_guard={level}");
-                    if let Ok(_parsed) = directive.parse::<tracing_subscriber::filter::Directive>() {
-                        tracing::info!("Policy log_level '{}' noted (set RUST_LOG to override)", level);
+                    if let Ok(_parsed) = directive.parse::<tracing_subscriber::filter::Directive>()
+                    {
+                        tracing::info!(
+                            "Policy log_level '{}' noted (set RUST_LOG to override)",
+                            level
+                        );
                     }
                 }
             }
