@@ -192,3 +192,8 @@ Results as of the latest run (16 tests, all passing):
 - **Fails Open on Unrecognized Structures**: If the payload is completely malformed or isn't a restricted method, it is ignored and passed through to prevent breaking handshakes.
 - **Fail Closed on Denials**: Strict rules explicitly reject payloads that match restricted categories or regex patterns without crashing the proxy (sends a clean `-32000` JSON-RPC error).
 - **HITL Interactive Prompts**: The interactive approval prompt attempts to use `inquire` which targets `/dev/tty` so it doesn't break the parent JSON-RPC `stdio` pipe. If no terminal is available (e.g., ran by an IDE in the background), it automatically falls back to a native graphical dialog box (using macOS AppKit, or Linux `zenity`/`kdialog`). **Note:** On Linux, your background MCP client must pass the `DISPLAY` or `WAYLAND_DISPLAY` environment variables for the dialog fallback to work.
+
+## License
+
+This project is licensed under the MIT License.
+
