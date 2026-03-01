@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use mcp_guard::rpc::{JsonRpcMessage, McpRequestParams};
 
 #[test]
@@ -19,7 +20,13 @@ fn test_rpc_parsing() {
     let params: McpRequestParams = msg.extract_mcp_params().expect("Should extract params");
     assert_eq!(params.name, "execute");
     assert_eq!(
-        params.arguments.unwrap().get("cmd").unwrap().as_str().unwrap(),
+        params
+            .arguments
+            .unwrap()
+            .get("cmd")
+            .unwrap()
+            .as_str()
+            .unwrap(),
         "ls"
     );
 }
@@ -43,7 +50,7 @@ fn test_error_response_creation() {
     assert!(err_msg.method.is_none());
     assert!(err_msg.params.is_none());
     assert!(err_msg.result.is_none());
-    
+
     let err_obj = err_msg.error.unwrap();
     assert_eq!(err_obj.get("code").unwrap().as_i64().unwrap(), -32000);
     assert_eq!(err_obj.get("message").unwrap().as_str().unwrap(), "Blocked");

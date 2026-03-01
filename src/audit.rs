@@ -89,8 +89,9 @@ impl AuditLogger {
     /// Logs an event asynchronously.
     pub async fn log(&self, record: AuditRecord) {
         if let Some(sender) = &self.sender
-            && let Err(e) = sender.send(record).await {
-                error!("Failed to enqueue audit record: {}", e);
-            }
+            && let Err(e) = sender.send(record).await
+        {
+            error!("Failed to enqueue audit record: {}", e);
+        }
     }
 }

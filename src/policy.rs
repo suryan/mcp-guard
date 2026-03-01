@@ -106,7 +106,10 @@ impl Policy {
                         for (_, val) in map {
                             if let Some(val_str) = val.as_str() {
                                 if re.is_match(val_str) {
-                                    return Evaluation::Denied(format!("Argument matched deny pattern: {}", pattern));
+                                    return Evaluation::Denied(format!(
+                                        "Argument matched deny pattern: {}",
+                                        pattern
+                                    ));
                                 }
                             }
                         }
