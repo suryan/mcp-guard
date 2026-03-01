@@ -12,33 +12,13 @@ It provides:
 - Interactive user confirmation for sensitive tool calls (HITL).
 - Comprehensive asynchronous audit logging in JSON Lines format.
 
-## Diagrams
+## Documentation Reference
 
-The architecture and flow diagrams are generated from D2 source files located in the [`docs/`](docs/) directory using the ELK layout engine.
+Rather than a massive single page, detailed guides for `mcp-guard` live in the [`docs/`](docs/) directory.
 
-### Updating the Diagrams
-
-To modify and re-render the images, you will need the `d2` tool:
-
-1. **Install D2**: Follow the installation guide at [D2 Language](https://d2lang.com/tour/install/).
-2. **Re-render**: Run the following commands from the project root to generate the updated PNGs with the ELK layout:
-
-```bash
-d2 --layout=elk docs/architecture.d2 docs/architecture.png
-d2 --layout=elk docs/flow.d2 docs/flow.png
-```
-
-### Architecture
-
-![mcp-guard architecture diagram](docs/architecture.png)
-
-*Component view showing the mcp-guard pipeline: CLI → Proxy → JSON-RPC Parser → Policy Engine → HITL / Audit Logger.*
-
-### Execution Flow
-
-![mcp-guard execution flow diagram](docs/flow.png)
-
-*Sequence diagram showing how a `tools/call` request is intercepted, evaluated (Allow / Deny / Prompt), logged, and either forwarded or rejected.*
+*   [**Configuring Policies (`guard-policy.toml`)**](docs/policy.md): Learn how to configure fail-closed access rules, deny regex patterns, and control audit settings.
+*   [**Usage & IDE Integration**](docs/usage.md): Scrubbed, real-world examples of wrapping targeted processes, passing arguments, and connecting internal IDE networks (e.g. Cursor to Jira/Confluence).
+*   [**Architecture & Flow Diagrams**](docs/architecture.md): Component mapping and execution flow pipelines to natively understand exactly how payloads are managed.
 
 ---
 
@@ -52,102 +32,7 @@ cargo build --release
 
 Place the compiled binary `target/release/mcp-guard` in your `$PATH`.
 
-## Configuration
-
-`mcp-guard` requires a policy file (e.g., `guard-policy.toml`) to define what the LLM is allowed to execute.
-
-Here are the recommended **best settings** for a secure `guard-policy.toml` when using Cursor or Claude Desktop:
-
-```toml
-[audit]
-log_file = "/tmp/mcp-audit.jsonl"
-log_level = "info"
-
-# 1. Safe Read-Only Tools (Allowed automatically)
-[tools.list_directory]
-action = "allow"
-
-[tools.search_files]
-action = "allow"
-
-[tools.read_file]
-action = "allow"
-# Hard block access to sensitive files even for read_file
-deny_patterns = [
-    "^/etc/.*",                 # System config
-    ".*\\.env.*",               # Environment variables
-    ".*id_rsa.*",               # SSH keys
-    ".*\\.aws/credentials$",    # AWS credentials
-    ".*\\.kube/config$"         # Kubernetes config
-]
-
-# 2. File Modification Tools (Require HITL approval)
-[tools.write_file]
-action = "prompt"
-
-[tools.str_replace_editor]
-action = "prompt"
-
-# 3. Command Execution (High Risk - Always Prompt)
-[tools.bash]
-action = "prompt"
-
-[tools.execute_command]
-action = "prompt"
-
-# 4. Database Constraints (Prompt + block destructive commands)
-[tools.sql_query]
-action = "prompt"
-deny_patterns = [
-    "(?i).*DROP\\s+(TABLE|DATABASE).*", 
-    "(?i).*DELETE\\s+FROM.*",
-    "(?i).*TRUNCATE\\s+TABLE.*"
-]
-
-# 5. Explicit Denials (Instantly rejected)
-[tools.danger_tool]
-action = "deny"
-```
-
-## Usage
-
-Modify your `mcp.json` (for Cursor/Claude) to invoke `mcp-guard` instead of the raw MCP server. Pass your target server as arguments after `--`.
-
-Example `mcp.json` configuration wrapping `mcp-secret-launcher`:
-
-```json
-{
-  "mcpServers": {
-    "my-secure-server": {
-      "command": "mcp-guard",
-      "args": [
-        "run",
-        "--policy",
-        "/path/to/guard-policy.toml",
-        "--",
-        "mcp-secret-launcher",
-        "run",
-        "--profile",
-        "mcp-atlassian",
-        "--",
-        "uvx",
-        "mcp-atlassian"
-      ]
-    }
-  }
-}
-```
-
-### Audit Logs
-
-The audit log records all traffic and actions taken by `mcp-guard`. Its location is determined entirely by the `log_file` setting under the `[audit]` section in your policy file. You can set this to any path where the user running `mcp-guard` has write permissions.
-
-Check your configured audit log file (e.g., `/tmp/mcp-audit.jsonl`) to see the entries:
-
-```json
-{"timestamp":"2026-03-01T08:00:00+00:00","direction":"client_to_server","method":"tools/call","tool_name":"execute_command","arguments":{"command":"ls -l"},"action":"approved"}
-{"timestamp":"2026-03-01T08:01:00+00:00","direction":"client_to_server","method":"tools/call","tool_name":"danger_tool","arguments":{},"action":"denied"}
-```
+---
 
 ## Testing
 
