@@ -14,17 +14,39 @@ Place the compiled binary `target/release/mcp-guard` in your `$PATH`.
 
 ---
 
+## Code Quality Checks
+
+The project enforces strict code quality using `rustfmt` and `clippy`. Both checks are **automatically enforced by `cargo test`** via integration tests (`test_clippy.rs` and `test_formatting.rs`), so any clippy warning or formatting issue will cause the test suite to fail.
+
+**To auto-fix formatting and some lints:**
+```bash
+# Auto-format code
+cargo fmt
+
+# Auto-fix clippy lints (where possible)
+cargo clippy --fix --allow-dirty --allow-staged
+```
+
+**To check individually (e.g., before committing):**
+```bash
+# Check formatting without modifying files
+cargo fmt -- --check
+
+# Check lints without fixing
+cargo clippy --all-targets --all-features
+```
+
+---
+
 ## Testing
 
-The test suite lives in [`tests/`](../tests/) and is organised into four integration test files. All tests are run using standard Cargo tooling — no extra scripts required.
+The test suite lives in [`tests/`](../tests/) and is organised into integration test files. All tests are run using standard Cargo tooling — no extra scripts required. Clippy and formatting checks are run automatically as part of the suite.
 
 ### Running All Tests
 
 ```bash
 cargo test
 ```
-
-Expected output: **16 tests, 0 failures.**
 
 ### Running a Specific Test Suite
 

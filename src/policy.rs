@@ -84,9 +84,9 @@ impl Policy {
 
         let policy: Self = match ext.as_str() {
             "yaml" | "yml" => serde_yaml::from_str(&content)
-                .map_err(|e| anyhow::anyhow!("Failed to parse YAML policy: {}", e))?,
+                .map_err(|e| anyhow::anyhow!("Failed to parse YAML policy: {e}"))?,
             _ => toml::from_str(&content)
-                .map_err(|e| anyhow::anyhow!("Failed to parse TOML policy: {}", e))?,
+                .map_err(|e| anyhow::anyhow!("Failed to parse TOML policy: {e}"))?,
         };
         Ok(policy)
     }
@@ -104,13 +104,12 @@ impl Policy {
                 for pattern in &rule.deny_patterns {
                     if let Ok(re) = Regex::new(pattern) {
                         for (_, val) in map {
-                            if let Some(val_str) = val.as_str() {
-                                if re.is_match(val_str) {
-                                    return Evaluation::Denied(format!(
-                                        "Argument matched deny pattern: {}",
-                                        pattern
-                                    ));
-                                }
+                            if let Some(val_str) = val.as_str()
+                                && re.is_match(val_str)
+                            {
+                                return Evaluation::Denied(format!(
+                                    "Argument matched deny pattern: {pattern}"
+                                ));
                             }
                         }
                     }

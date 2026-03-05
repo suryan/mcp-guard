@@ -29,7 +29,7 @@ fn has_tty() -> bool {
 /// misleading `MissingDep` / I/O error and replacing it with a clear log
 /// message that tells the operator how to unblock themselves.
 ///
-/// On **macOS** `native-dialog` uses AppKit directly (no external tool, no
+/// On **macOS** `native-dialog` uses `AppKit` directly (no external tool, no
 /// display env needed), so we always return `true` there.
 fn has_display() -> bool {
     // macOS: AppKit is always available when the process has a GUI session.
@@ -255,5 +255,3 @@ mod tests {
         assert!(result);
     }
 }
-
-

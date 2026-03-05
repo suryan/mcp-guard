@@ -27,16 +27,15 @@ async fn main() -> anyhow::Result<()> {
             let policy = Policy::load(&policy_path)?;
 
             // Apply log_level from audit config if specified and not already overridden by env
-            if std::env::var("RUST_LOG").is_err() {
-                if let Some(ref level) = policy.audit.log_level {
-                    let directive = format!("mcp_guard={level}");
-                    if let Ok(_parsed) = directive.parse::<tracing_subscriber::filter::Directive>()
-                    {
-                        tracing::info!(
-                            "Policy log_level '{}' noted (set RUST_LOG to override)",
-                            level
-                        );
-                    }
+            if std::env::var("RUST_LOG").is_err()
+                && let Some(ref level) = policy.audit.log_level
+            {
+                let directive = format!("mcp_guard={level}");
+                if let Ok(_parsed) = directive.parse::<tracing_subscriber::filter::Directive>() {
+                    tracing::info!(
+                        "Policy log_level '{}' noted (set RUST_LOG to override)",
+                        level
+                    );
                 }
             }
 
@@ -48,24 +47,21 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Audit { log_file } => {
-            let path = match log_file {
-                Some(p) => p,
-                None => {
-                    eprintln!("Error: --log-file <PATH> is required for the audit subcommand.");
-                    eprintln!("Example: mcp-guard audit --log-file ~/.kiro/logs/mcp-audit.jsonl");
-                    std::process::exit(1);
-                }
+            let Some(path) = log_file else {
+                eprintln!("Error: --log-file <PATH> is required for the audit subcommand.");
+                eprintln!("Example: mcp-guard audit --log-file ~/.kiro/logs/mcp-audit.jsonl");
+                std::process::exit(1);
             };
 
             let content = std::fs::read_to_string(&path)
-                .map_err(|e| anyhow::anyhow!("Failed to read log file {:?}: {}", path, e))?;
+                .map_err(|e| anyhow::anyhow!("Failed to read log file {}: {e}", path.display()))?;
 
             if content.trim().is_empty() {
-                println!("Audit log is empty: {:?}", path);
+                println!("Audit log is empty: {}", path.display());
                 return Ok(());
             }
 
-            println!("=== MCP Guard Audit Log: {:?} ===\n", path);
+            println!("=== MCP Guard Audit Log: {} ===\n", path.display());
             for (i, line) in content.lines().enumerate() {
                 if line.trim().is_empty() {
                     continue;
@@ -77,10 +73,10 @@ async fn main() -> anyhow::Result<()> {
                         let action = entry["action"].as_str().unwrap_or("?");
                         let method = entry["method"].as_str().unwrap_or("?");
                         println!("[{i:>4}] {ts}  {action:>8}  {method}({tool})");
-                        if let Some(args) = entry.get("arguments") {
-                            if !args.is_null() {
-                                println!("       args: {args}");
-                            }
+                        if let Some(args) = entry.get("arguments")
+                            && !args.is_null()
+                        {
+                            println!("       args: {args}");
                         }
                     }
                     Err(_) => println!("[{i:>4}] (unparseable) {line}"),

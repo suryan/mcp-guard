@@ -14,7 +14,7 @@ use tracing::error;
 pub struct AuditRecord {
     /// Timestamp of the event in RFC3339 format.
     pub timestamp: String,
-    /// Direction of traffic (e.g., client_to_server).
+    /// Direction of traffic (e.g., `client_to_server`).
     pub direction: String,
     /// The original JSON-RPC method.
     pub method: Option<String>,

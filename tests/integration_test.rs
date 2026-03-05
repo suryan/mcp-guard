@@ -1,5 +1,10 @@
-#![allow(missing_docs)]
-#![allow(deprecated)] // assert_cmd::Command::cargo_bin is deprecated in newer versions
+#![allow(
+    missing_docs,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    deprecated
+)]
 use assert_cmd::Command;
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -67,7 +72,7 @@ action = "allow"
 
     let payload = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "allowed_tool", "arguments": {}}}"#;
 
-    cmd.write_stdin(format!("{}\n", payload))
+    cmd.write_stdin(format!("{payload}\n"))
         .assert()
         .success()
         .stdout(predicates::str::contains(
@@ -92,7 +97,7 @@ action = "deny"
 
     let payload = r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "denied_tool", "arguments": {}}}"#;
 
-    cmd.write_stdin(format!("{}\n", payload))
+    cmd.write_stdin(format!("{payload}\n"))
         .assert()
         .success() // proxy itself succeeds because it blocks and then the stream closes
         .stdout(predicates::str::contains("Blocked by MCP Guard Policy"));
@@ -120,7 +125,7 @@ action = "prompt"
     let payload = r#"{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "risky_tool", "arguments": {}}}"#;
 
     // Send payload, then 'y' for the prompt
-    cmd.write_stdin(format!("{}\ny\n", payload))
+    cmd.write_stdin(format!("{payload}\ny\n"))
         .assert()
         .success()
         .stdout(predicates::str::contains(
@@ -147,7 +152,7 @@ action = "prompt"
     let payload = r#"{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "risky_tool", "arguments": {}}}"#;
 
     // Send payload, then 'n' for the prompt
-    cmd.write_stdin(format!("{}\nn\n", payload))
+    cmd.write_stdin(format!("{payload}\nn\n"))
         .assert()
         .success()
         .stdout(predicates::str::contains("Blocked by MCP Guard Policy"));
@@ -173,7 +178,7 @@ fn test_proxy_invalid_mcp_request() {
     let payload =
         r#"{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"something": "else"}}"#;
 
-    cmd.write_stdin(format!("{}\n", payload))
+    cmd.write_stdin(format!("{payload}\n"))
         .assert()
         .success()
         .stdout(predicates::str::contains(

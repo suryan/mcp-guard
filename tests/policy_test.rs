@@ -1,4 +1,10 @@
-#![allow(missing_docs)]
+#![allow(
+    missing_docs,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::similar_names
+)]
 use mcp_guard::policy::{Action, Evaluation, Policy, ToolRule};
 use std::io::Write;
 use tempfile::NamedTempFile;

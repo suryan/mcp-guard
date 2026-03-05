@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 //! Tests for the Human-In-The-Loop (HITL) prompt module.
 
 use mcp_guard::hitl::{
@@ -27,8 +27,7 @@ fn test_hitl_deny() {
 /// interactive prompt is ever shown.
 #[test]
 fn test_hitl_no_tty_defaults_to_deny() {
-    let result =
-        prompt_for_approval_with_answer("risky_tool", r#"{"cmd": "rm -rf /"}"#, false);
+    let result = prompt_for_approval_with_answer("risky_tool", r#"{"cmd": "rm -rf /"}"#, false);
     assert!(!result, "Expected deny when no approval given");
 }
 
@@ -66,7 +65,11 @@ fn test_gui_fallback_error() {
         r#"{"cmd": "echo test"}"#,
         || false, // no TTY
         || true,  // display server available
-        |_msg| Err(native_dialog::Error::Io(std::io::Error::from(std::io::ErrorKind::Other))),
+        |_msg| {
+            Err(native_dialog::Error::Io(std::io::Error::from(
+                std::io::ErrorKind::Other,
+            )))
+        },
     );
     assert!(!result, "Expected denial when GUI dialog fails to render");
 }
@@ -78,11 +81,14 @@ fn test_gui_no_display_server() {
     let result = prompt_for_approval_with_gui_mock(
         "headless_tool",
         r#"{"cmd": "echo test"}"#,
-        || false,         // no TTY
-        || false,         // no display server (headless / SSH / container)
+        || false,        // no TTY
+        || false,        // no display server (headless / SSH / container)
         |_msg| Ok(true), // must NOT be reached
     );
-    assert!(!result, "Expected denial when no display server is available");
+    assert!(
+        !result,
+        "Expected denial when no display server is available"
+    );
 }
 
 #[test]
@@ -91,12 +97,15 @@ fn test_terminal_prompt_approved() {
     let result = prompt_for_approval_with_full_mock(
         "terminal_tool",
         r#"{"cmd": "echo test"}"#,
-        || true,          // TTY present
-        || true,          // display (unused when TTY present)
-        |_msg| Ok(true),  // GUI (unused when TTY present)
-        |_msg| Ok(true),  // terminal prompt: approved
+        || true,         // TTY present
+        || true,         // display (unused when TTY present)
+        |_msg| Ok(true), // GUI (unused when TTY present)
+        |_msg| Ok(true), // terminal prompt: approved
     );
-    assert!(result, "Expected approval when terminal prompt returns Ok(true)");
+    assert!(
+        result,
+        "Expected approval when terminal prompt returns Ok(true)"
+    );
 }
 
 #[test]
@@ -105,12 +114,15 @@ fn test_terminal_prompt_denied() {
     let result = prompt_for_approval_with_full_mock(
         "terminal_tool",
         r#"{"cmd": "echo test"}"#,
-        || true,           // TTY present
-        || true,           // display (unused)
-        |_msg| Ok(false),  // GUI (unused)
-        |_msg| Ok(false),  // terminal prompt: denied
+        || true,          // TTY present
+        || true,          // display (unused)
+        |_msg| Ok(false), // GUI (unused)
+        |_msg| Ok(false), // terminal prompt: denied
     );
-    assert!(!result, "Expected denial when terminal prompt returns Ok(false)");
+    assert!(
+        !result,
+        "Expected denial when terminal prompt returns Ok(false)"
+    );
 }
 
 #[test]
@@ -119,9 +131,9 @@ fn test_terminal_prompt_error() {
     let result = prompt_for_approval_with_full_mock(
         "terminal_tool",
         r#"{"cmd": "echo test"}"#,
-        || true,  // TTY present
-        || true,  // display (unused)
-        |_msg| Ok(true), // GUI (unused)
+        || true,                                   // TTY present
+        || true,                                   // display (unused)
+        |_msg| Ok(true),                           // GUI (unused)
         |_msg| Err(inquire::InquireError::NotTTY), // terminal prompt fails
     );
     assert!(!result, "Expected denial when terminal prompt returns Err");
