@@ -4,8 +4,8 @@
 //! and evaluates requests based on action types and regex patterns.
 
 use regex::Regex;
+use rustc_hash::FxHashMap;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 /// The action to take when a rule matches.
@@ -50,7 +50,7 @@ pub struct Policy {
 
     /// A map of tool names to their specific rules.
     #[serde(default)]
-    pub tools: HashMap<String, ToolRule>,
+    pub tools: FxHashMap<String, ToolRule>,
 }
 
 /// Represents the final evaluated decision for a tool request.
