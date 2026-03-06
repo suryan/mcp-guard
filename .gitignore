@@ -32,3 +32,4 @@ icons
 .llvm-cov-env
 .cargo-llvm-cov
 coverage/
+*.code-workspace
