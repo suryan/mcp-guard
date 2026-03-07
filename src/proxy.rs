@@ -18,6 +18,9 @@ use crate::policy::{Evaluation, Policy};
 use crate::rpc::JsonRpcMessage;
 
 /// Runs the proxy loop given the policy, logger, and target command.
+///
+/// # Errors
+/// Returns an error if the target MCP server fails to spawn, or if attaching to its standard I/O streams fails.
 #[allow(clippy::too_many_lines)]
 pub async fn run_proxy(
     policy: Policy,
