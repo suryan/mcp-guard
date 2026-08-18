@@ -4,19 +4,43 @@ This guide covers building, testing, and contributing to `mcp-guard`.
 
 ## Setup & Installation
 
-Ensure you have Rust installed. Then, clone the repository and build the binary:
+Ensure you have Rust installed (or let `scripts/install.sh` bootstrap rustup).
+
+### One-liner / from-source install
+
+```bash
+# From GitHub (binary + PATH + starter policy)
+curl -fsSL https://raw.githubusercontent.com/suryan/mcp-guard/main/scripts/install.sh \
+  | bash -s -- --setup-user --yes
+
+# From this clone
+./scripts/install.sh --local --setup-user
+make setup-user
+```
+
+### Manual build
 
 ```bash
 cargo build --release
+# binary: target/release/mcp-guard
+make install            # copies to ~/.local/bin
 ```
 
-Place the compiled binary `target/release/mcp-guard` in your `$PATH`.
+Install scripts live under [`scripts/`](../scripts/):
+
+| Script | Role |
+|--------|------|
+| `scripts/install.sh` | macOS/Linux install-from-source (`curl \| bash` one-liner) |
+| `scripts/setup-user.sh` | PATH via `path.env` + starter policy + shell rc (idempotent) |
+| `Makefile` | `make install` / `make setup-user` / `make test` |
+
+See [usage.md](usage.md#installation) for flags and environment variables.
 
 ---
 
 ## Code Quality Checks
 
-The project enforces strict code quality using `rustfmt` and `clippy`. Both checks are **automatically enforced by `cargo test`** via integration tests (`test_clippy.rs` and `test_formatting.rs`), so any clippy warning or formatting issue will cause the test suite to fail.
+The project enforces strict code quality using `rustfmt` and `clippy`. See [clippy_policy.md](clippy_policy.md) for detailed linting requirements.
 
 **To auto-fix formatting and some lints:**
 ```bash
@@ -34,6 +58,34 @@ cargo fmt -- --check
 
 # Check lints without fixing
 cargo clippy --all-targets --all-features
+```
+
+### Git Hooks
+
+To automatically enforce formatting, clippy lints, and test success before creating a commit, you can set up a local Git `pre-commit` hook. 
+
+Create a file at `.git/hooks/pre-commit` with the following content and make it executable (`chmod +x .git/hooks/pre-commit`):
+
+```sh
+#!/bin/sh
+# pre-commit hook to enforce formatting, clippy, and pass tests
+
+echo "Running pre-commit checks..."
+
+# 1. Check Formatting
+echo "=> Running cargo fmt"
+cargo fmt -- --check || { echo "❌ Formatting check failed."; exit 1; }
+
+# 2. Check Clippy
+echo "=> Running cargo clippy"
+cargo clippy --all-targets --all-features || { echo "❌ Clippy failed."; exit 1; }
+
+# 3. Run Tests
+echo "=> Running cargo test"
+cargo test || { echo "❌ Tests failed."; exit 1; }
+
+echo "✅ All pre-commit checks passed!"
+exit 0
 ```
 
 ---

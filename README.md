@@ -20,7 +20,62 @@
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Install
+
+No release binaries required — build from source on the machine that will run it.
+Works on **macOS** and **Linux** (including WSL2).
+
+### One-liner (recommended)
+
+```bash
+# Binary + PATH (~/.local/bin) + starter policy
+curl -fsSL https://raw.githubusercontent.com/suryan/mcp-guard/main/scripts/install.sh \
+  | bash -s -- --setup-user --yes
+```
+
+What that does:
+
+1. Bootstraps [rustup](https://rustup.rs) if `cargo` is missing
+2. Builds a release binary → `~/.local/bin/mcp-guard`
+3. Writes `~/.config/mcp-guard/path.env` and sources it from `~/.bashrc` / `~/.zshrc` / `~/.profile` / `~/.zprofile`
+4. Writes a starter policy at `~/.config/mcp-guard/policy.toml` (existing files are left alone)
+
+```bash
+# options
+curl -fsSL https://raw.githubusercontent.com/suryan/mcp-guard/main/scripts/install.sh -o install-mcp-guard.sh
+bash install-mcp-guard.sh --help
+bash install-mcp-guard.sh --setup-user --yes
+```
+
+Open a **new shell** after install, then:
+
+```bash
+which -a mcp-guard
+mcp-guard --help
+```
+
+### From a local clone
+
+```bash
+./scripts/install.sh --local --setup-user
+# or stepwise:
+make setup-user              # release binary + PATH + starter policy
+```
+
+### Rust developers
+
+```bash
+cargo install --git https://github.com/suryan/mcp-guard --locked
+# then user integration only:
+./scripts/setup-user.sh
+```
+
+**Requirements:** `git`, a C linker (`build-essential` on Debian/Ubuntu, Xcode CLT on macOS),
+network for crates.io on first build.
+
+---
+
+## 🚀 Quick Start
 
 ### 1. Wrap your MCP Server
 Update your `mcp.json` to use `mcp-guard` as the primary command:
@@ -29,12 +84,16 @@ Update your `mcp.json` to use `mcp-guard` as the primary command:
 "my-server": {
   "command": "mcp-guard",
   "args": [
-    "--policy", "guard-policy.toml",
+    "run",
+    "--policy", "/home/you/.config/mcp-guard/policy.toml",
+    "uvx",
     "--",
-    "uvx", "my-server-command"
+    "my-server-command"
   ]
 }
 ```
+
+Use the absolute policy path from `~/.config/mcp-guard/mcp.json.example` (written by `--setup-user`). MCP hosts do not expand `~`.
 
 ### 2. Configure Your Policy
 Create a `guard-policy.toml` file:
@@ -65,9 +124,11 @@ For maximum security, combine **mcp-guard** with [**mcp-secret-launcher**](https
 "my-server": {
   "command": "mcp-guard",
   "args": [
-    "--policy", "guard-policy.toml",
+    "run",
+    "--policy", "/home/you/.config/mcp-guard/policy.toml",
+    "mcp-secret-launcher",
     "--",
-    "mcp-secret-launcher", "run", "--profile", "my-server",
+    "run", "--profile", "my-server",
     "--",
     "uvx", "my-server-command"
   ]
