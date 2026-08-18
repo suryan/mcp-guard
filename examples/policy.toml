@@ -1,0 +1,44 @@
+# mcp-guard starter policy
+#
+# Unknown tools default to `prompt` (HITL). Explicitly `allow` tools that an
+# IDE should use without a dialog. See docs/policy.md.
+
+[audit]
+log_file = "audit.jsonl"
+log_level = "info"
+
+# ---------------------------------------------------------
+# Safe read-only tools (uncomment and adjust names)
+# ---------------------------------------------------------
+# [tools.list_directory]
+# action = "allow"
+#
+# [tools.search_files]
+# action = "allow"
+#
+# [tools.read_file]
+# action = "allow"
+# deny_patterns = [
+#     "^/etc/.*",
+#     ".*\\.env.*",
+#     ".*id_rsa.*",
+#     ".*\\.aws/credentials$",
+# ]
+
+# ---------------------------------------------------------
+# High-risk tools
+# ---------------------------------------------------------
+# [tools.write_file]
+# action = "prompt"
+#
+# [tools.execute_command]
+# action = "prompt"
+#
+# [tools.bash]
+# action = "prompt"
+
+# ---------------------------------------------------------
+# Explicit denials
+# ---------------------------------------------------------
+# [tools.danger_tool]
+# action = "deny"

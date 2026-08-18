@@ -4,13 +4,37 @@ This guide covers building, testing, and contributing to `mcp-guard`.
 
 ## Setup & Installation
 
-Ensure you have Rust installed. Then, clone the repository and build the binary:
+Ensure you have Rust installed (or let `scripts/install.sh` bootstrap rustup).
+
+### One-liner / from-source install
+
+```bash
+# From GitHub (binary + PATH + starter policy)
+curl -fsSL https://raw.githubusercontent.com/suryan/mcp-guard/main/scripts/install.sh \
+  | bash -s -- --setup-user --yes
+
+# From this clone
+./scripts/install.sh --local --setup-user
+make setup-user
+```
+
+### Manual build
 
 ```bash
 cargo build --release
+# binary: target/release/mcp-guard
+make install            # copies to ~/.local/bin
 ```
 
-Place the compiled binary `target/release/mcp-guard` in your `$PATH`.
+Install scripts live under [`scripts/`](../scripts/):
+
+| Script | Role |
+|--------|------|
+| `scripts/install.sh` | macOS/Linux install-from-source (`curl \| bash` one-liner) |
+| `scripts/setup-user.sh` | PATH via `path.env` + starter policy + shell rc (idempotent) |
+| `Makefile` | `make install` / `make setup-user` / `make test` |
+
+See [usage.md](usage.md#installation) for flags and environment variables.
 
 ---
 

@@ -1,6 +1,88 @@
 # Usage & Integration Guide
 
-`mcp-guard` runs locally and operates entirely on standard I/O (stdin/stdout) bridging. 
+`mcp-guard` runs locally and operates entirely on standard I/O (stdin/stdout) bridging.
+
+## Installation
+
+`mcp-guard` is a single Rust binary. Prefer **install from source** on each machine
+(no GitHub release artifacts to maintain). Supported: **macOS**, **Linux**, **WSL2**.
+
+### One-liner (recommended)
+
+```bash
+# Binary + PATH (~/.local/bin) + starter policy + shell rc
+curl -fsSL https://raw.githubusercontent.com/suryan/mcp-guard/main/scripts/install.sh \
+  | bash -s -- --setup-user --yes
+```
+
+What it does:
+
+1. Ensures a Rust toolchain (`rustup` if `cargo` is missing)
+2. Clones/updates the repo under `~/.local/src/mcp-guard` (override with `--dir`)
+3. `cargo build --release`
+4. Installs to `~/.local/bin/mcp-guard` (override with `--prefix`)
+5. With `--setup-user`: runs `scripts/setup-user.sh`
+   - writes `~/.config/mcp-guard/path.env` (prepends the bindir)
+   - sources it from `~/.bashrc`, `~/.zshrc`, `~/.profile`, `~/.zprofile` (idempotent)
+   - writes a starter policy at `~/.config/mcp-guard/policy.toml` if missing
+   - writes `~/.config/mcp-guard/mcp.json.example`
+
+```bash
+# Common options
+bash scripts/install.sh --help
+bash scripts/install.sh --prefix ~/.local --setup-user --yes
+bash scripts/install.sh --ref main
+bash scripts/install.sh --local --setup-user            # current clone only
+MCP_GUARD_PREFIX=/usr/local sudo -E bash scripts/install.sh --yes   # system-wide (careful)
+```
+
+| Variable / flag | Default | Meaning |
+|-----------------|---------|---------|
+| `--prefix` / `MCP_GUARD_PREFIX` | `~/.local` | Binary at `$PREFIX/bin/mcp-guard` |
+| `--ref` / `MCP_GUARD_REF` | `main` | Git branch, tag, or commit |
+| `--repo` / `MCP_GUARD_REPO` | this GitHub repo | Clone URL |
+| `--dir` / `MCP_GUARD_DIR` | `~/.local/src/mcp-guard` | Checkout path |
+| `--setup-user` | off | PATH + starter policy + shell rc (see `setup-user.sh`) |
+| `--no-shell-rc` | off | Write `path.env` / policy only; do not edit rc files |
+| `--no-policy` | off | Skip writing a starter policy file |
+| `--yes` | off | Non-interactive rustup install |
+
+**Requirements:** `curl` + `git`, C linker (`build-essential` on Debian/Ubuntu,
+Xcode CLT on macOS: `xcode-select --install`), network for crates.io.
+
+### `cargo install` (Rust toolchain already present)
+
+```bash
+cargo install --git https://github.com/suryan/mcp-guard --locked
+./scripts/setup-user.sh    # PATH + starter policy (from a clone)
+```
+
+### From a local clone
+
+```bash
+git clone https://github.com/suryan/mcp-guard.git
+cd mcp-guard
+./scripts/install.sh --local --setup-user
+# or stepwise:
+make setup-user                 # release binary + PATH + starter policy
+```
+
+### Make shortcuts
+
+```bash
+make help          # list targets
+make release       # optimized build
+make install       # install binary to ~/.local/bin
+make setup-user    # binary + PATH + starter policy + shell rc
+make test          # cargo test
+```
+
+Open a **new shell** after `--setup-user`, then `which -a mcp-guard`.
+
+MCP / IDE hosts often skip shell profiles — put `~/.local/bin` first on that
+host’s `PATH` (or use the absolute path to `mcp-guard`).
+
+---
 
 ## CLI Execution
 
@@ -13,7 +95,7 @@ mcp-guard run --policy <POLICY_PATH> <TARGET_EXECUTABLE> -- <TARGET_ARGS>...
 
 For example, to wrap an imaginary python script:
 ```bash
-mcp-guard run --policy ~/.mcp_guard/policy.toml python -- script.py
+mcp-guard run --policy ~/.config/mcp-guard/policy.toml python -- script.py
 ```
 
 Because this is a TTY terminal, tools set to `action = "prompt"` will pause execution, print the JSON-RPC to your console, and await your `Y/n` keypress.
@@ -45,7 +127,7 @@ Notice how `mcp-secret-launcher` represents the target executable (placed above 
       "args": [
         "run",
         "--policy",
-        "/home/user/.mcp_guard/guard-policy.toml",
+        "/home/user/.config/mcp-guard/policy.toml",
         "mcp-secret-launcher",
         "--",
         "run",
